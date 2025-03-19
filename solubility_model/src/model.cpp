@@ -220,27 +220,22 @@ namespace MODEL
             double yH2 = phaseCompFrac[gasIdx][h2Idx];
             double xH2O = phaseCompFrac[liquidIdx][h2oIdx];
             double xH2 = phaseCompFrac[liquidIdx][h2Idx];
-            
-            double relErr = 0.;
 
-            if ( modelTrueData[ip][it] != -1. )
-            {
-                relErr = std::abs( ( yH2O - modelTrueData[ip][it] ) / modelTrueData[ip][it] );
-                if ( 100 * relErr >= 5.0 ) { 
-                    totalOutlierData++; 
-                    std::cout << modelTrueData[ip][it] << ", " << yH2O << "\n";
-                };
+            if ( std::abs( modelTrueData[ip][it] + 1. ) > minDivTol ) 
+            {   
+                double relErr = std::abs( ( yH2O - modelTrueData[ip][it] ) / modelTrueData[ip][it] );                
                 totalRelativeError += relErr;
                 totalValidData++;
+                // 
+                if ( 100 * relErr >= 10.0 ) { 
+                    totalOutlierData++; 
+                };
             } else { 
-                relErr = -1.; 
+                double relErr = -1.; 
             };
         };
         };
         //
-        double totalOutlierRate = totalOutlierData / totalValidData * 100;
-        __VAR_WITH_EXCEPTION__(totalOutlierRate, "PERCENT DATA POINTS THAT EXCEEDS 5% RELATIVE ERR. ");
-        __VAR_WITH_EXCEPTION__(totalOutlierData, "TOTAL NUMBER OF VALID DATA POINTS. ");
         double avgRelativeError = totalRelativeError / totalValidData;
         return avgRelativeError;
     };

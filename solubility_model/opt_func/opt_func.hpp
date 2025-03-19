@@ -29,11 +29,11 @@ namespace OPT_FUNCTION
                 if ( initP < 30 ) { initP += 1.; }
                 else { initP += 5.; };
             };
-            assert( dataP.size() == 63);
-            assert( dataT.size() == 6);
-            std::ifstream f("/home/v183p176/Desktop/limbo/solubility_model/h2_h2o_yh2o.txt");
+            std::ifstream f("/home/ver2king/Desktop/limbo/solubility_model/h2_h2o_yh2o.txt");
             int row = dataP.size(); int col = dataT.size();
             Tensor2DFloat64 waterVaporPhaseData = ReadMatrixFile(f, row, col);
+            assert( waterVaporPhaseData.size() == row);
+            assert( waterVaporPhaseData[0].size() == col);
 
             /// Define the lower and higher bounds for all input coeffients
             double lowerRate = 0.95; double higherRate = 1.05; 
