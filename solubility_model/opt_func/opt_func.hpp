@@ -32,7 +32,8 @@ namespace OPT_FUNCTION
         std::vector< PROPERTY > _modelProps;
         std::vector< PROPERTY > _experimentalProps;
         //
-        OBJ_FUNC_TYPE _objFuncType = OBJ_FUNC_TYPE::MSE;
+        OBJ_FUNC_TYPE _objFuncType = OBJ_FUNC_TYPE::RE;
+        double const _objFuncTol = 0.05;
     };
 
     struct ProblemParams 
@@ -74,46 +75,29 @@ namespace OPT_FUNCTION
         {
             std::map< PROPERTY, Data > modelData;
             //
-            __CHECK_POINT_WITH_MSG__("GET DATA");
-
             Tensor1DFloat64 temperatureData = problemParams.temperatureData;
             Tensor1DFloat64 pressureData = problemParams.pressureData;
             double saltMolarity = problemParams.saltMolarity;
             String temperatureUnit = problemParams.getTemperatureUnit();
             String pressureUnit = problemParams.getPressureUnit();
             //
-            __CHECK_POINT_WITH_MSG__("GET PARAM BOUNDS");
-
             Tensor1DFloat64 param0Bounds = problemParams.getParamBounds( problemParams.paramNames[0] );
             Tensor1DFloat64 param1Bounds = problemParams.getParamBounds( problemParams.paramNames[1] );
             Tensor1DFloat64 param2Bounds = problemParams.getParamBounds( problemParams.paramNames[2] );
             Tensor1DFloat64 param3Bounds = problemParams.getParamBounds( problemParams.paramNames[3] );
             //
-            __CHECK_POINT_WITH_MSG__("SET MODEL PARAMS");
-            
             ModelParams modelParams = { LinearScaler(inputParams(0), param0Bounds[0], param0Bounds[1]),
             LinearScaler(inputParams(1), param1Bounds[0], param1Bounds[1]),
             LinearScaler(inputParams(2), param2Bounds[0], param2Bounds[1]),
             LinearScaler(inputParams(3), param3Bounds[0], param3Bounds[1]) };
             //
-            __CHECK_POINT_WITH_MSG__("COMPUTE OBJECTIVE FUNCTION");
-
             for ( int i = 0; i < problemParams.propNames.size(); ++ i)
             {   
-                __CHECK_POINT_WITH_MSG__("GET PROPERTY");
-
                 PROPERTY Property = problemParams.propNames[i];
-                
-                __CHECK_POINT_WITH_MSG__("COMPUTE MODEL PRED");
                 Tensor2DFloat64 propertyDataMatrix = SolubilityModelWrapper(temperatureData, pressureData, 
                 modelParams, saltMolarity, temperatureUnit, pressureUnit, 
                 Property, pressureDim, temperatureDim);
-
-                __CHECK_POINT_WITH_MSG__("SET MODEL DATA");
                 DATA::Data propertyData( pressureData, temperatureData, propertyDataMatrix );
-                std::cout << propertyDataMatrix.size() << " , " << propertyDataMatrix[0].size() << "\n";
-                
-                __CHECK_POINT_WITH_MSG__("INSERT MODEL DATA");
                 modelData.insert( { Property, propertyData } );
             };
             return modelData;

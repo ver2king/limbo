@@ -46,7 +46,7 @@ namespace DATA
     double Data::getPropertyData( double T, double P ) 
     {   
         //
-        double propertyVal = std::numeric_limits<double>::quiet_NaN();
+        double propertyVal = doubleNaN;
         auto temperatureIt = std::find( _temperatureData.begin(), _temperatureData.end(), T );
         auto pressureIt = std::find( _pressureData.begin(), _pressureData.end(), P );
         if (temperatureIt != _temperatureData.end() && pressureIt != _pressureData.end() ) {
@@ -57,9 +57,9 @@ namespace DATA
             else if ( _pressureDim == PROPERTY_DIMENSION::COL && _temperatureDim == PROPERTY_DIMENSION::ROW ) 
             { propertyVal = _propertyData[temperatureIdx][pressureIdx]; }
             else 
-            { propertyVal = std::numeric_limits<double>::quiet_NaN(); };
+            { propertyVal = doubleNaN; };
         } else { 
-            propertyVal = std::numeric_limits<double>::quiet_NaN();
+            propertyVal = doubleNaN;
         };
         return propertyVal;
     };

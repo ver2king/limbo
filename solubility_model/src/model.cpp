@@ -231,85 +231,41 @@ namespace MODEL
         Tensor2DFloat64 propertyData(1, Tensor1DFloat64(1, doubleNaN ));
 
         if ( pressureDim == PROPERTY_DIMENSION::ROW && temperatureDim == PROPERTY_DIMENSION::COL ) 
-        { 
+        {    
             propertyData.resize( _pressureDim, Tensor1DFloat64( _temperatureDim, doubleNaN ) );
+            for (Index ip = 0; ip < _pressureDim; ++ ip)
+            {
+            propertyData[ip].resize( _temperatureDim, doubleNaN );
+            Tensor1DFloat64 _tmpPropertyData( _temperatureDim, doubleNaN );
+            for ( Index it = 0; it < _temperatureDim; ++ it)
+            {
+            double propertyVal = ComponentPhaseFractionsWrapper(temperatureData[it], pressureData[ip], m_s, 
+            temperatureUnit, pressureUnit, modelParams, Property);
+            _tmpPropertyData[it] = propertyVal;
+            };
+            propertyData[ip] = _tmpPropertyData;
+            };
         } else if ( pressureDim == PROPERTY_DIMENSION::COL && temperatureDim == PROPERTY_DIMENSION::ROW )
-        {
+        {      
             propertyData.resize( _temperatureDim, Tensor1DFloat64( _pressureDim, doubleNaN ) );
+            for (Index it = 0; it < _temperatureDim; ++ it)
+            {
+            propertyData[it].resize( _pressureDim, doubleNaN );
+            Tensor1DFloat64 _tmpPropertyData( _pressureDim, doubleNaN );
+            for ( Index ip = 0; ip < _pressureDim; ++ ip)
+            {
+            double propertyVal = ComponentPhaseFractionsWrapper(temperatureData[it], pressureData[ip], m_s, 
+            temperatureUnit, pressureUnit, modelParams, Property);
+            _tmpPropertyData[ip] = propertyVal;
+            };
+            propertyData[it] = _tmpPropertyData;
+            };
         } else 
         { 
             #warning "Can not resize property data based on given dimension properties."
             exit(1);
         };
-
-        if ( pressureDim == PROPERTY_DIMENSION::ROW && temperatureDim == PROPERTY_DIMENSION::COL ) 
-        {   
-            for (Index ip = 0; ip < _pressureDim; ++ ip)
-            {
-            for ( Index it = 0; it < _temperatureDim; ++ it)
-            {
-            double propertyVal = ComponentPhaseFractionsWrapper(temperatureData[it], pressureData[ip], m_s, 
-            temperatureUnit, pressureUnit, modelParams, Property);
-            propertyData[ip][it] = propertyVal;
-            };
-            };
-        } else 
-        {   
-            for (Index it = 0; it < _temperatureDim; ++ it)
-            {
-            for ( Index ip = 0; ip < _pressureDim; ++ ip)
-            {
-            double propertyVal = ComponentPhaseFractionsWrapper(temperatureData[it], pressureData[ip], m_s, 
-            temperatureUnit, pressureUnit, modelParams, Property);
-            propertyData[it][ip] = propertyVal;
-            };
-            };
-        };
-
-        std::cout << propertyData.size() << " , " << propertyData[0].size() << "\n";
         return propertyData;
     };
-
-
-    double SolubilityModelRelativeError(Tensor1DFloat64 & temperatureData, Tensor1DFloat64 & pressureData, 
-    ModelParams modelParams, double m_s, std::string temperatureUnit, std::string pressureUnit, 
-    Tensor2DFloat64 modelTrueData)
-    {   
-        assert(modelTrueData.size() == pressureData.size());
-        assert(modelTrueData[0].size() == temperatureData.size());
-        //
-        int totalValidData = 0;
-        int totalOutlierData = 0;
-        double totalRelativeError = 0.;
-        //
-        for (Index ip = 0; ip < pressureData.size(); ++ ip)
-        {
-        for ( Index it = 0; it < temperatureData.size(); ++ it)
-        {
-            Tensor2DFloat64 phaseCompFrac = SolubilityModel(temperatureData[it], pressureData[ip], m_s, 
-            temperatureUnit, pressureUnit, modelParams);
-        
-            double yH2O = phaseCompFrac[gasIdx][h2oIdx];
-            double yH2 = phaseCompFrac[gasIdx][h2Idx];
-            double xH2O = phaseCompFrac[liquidIdx][h2oIdx];
-            double xH2 = phaseCompFrac[liquidIdx][h2Idx];
-
-            if ( std::abs( modelTrueData[ip][it] + 1. ) > minDivTol ) 
-            {   
-                double relErr = std::abs( ( yH2O - modelTrueData[ip][it] ) / modelTrueData[ip][it] );                
-                totalRelativeError += relErr;
-                totalValidData++;
-                // 
-                if ( 100 * relErr >= 10.0 ) { 
-                    totalOutlierData++; 
-                };
-            } else { 
-                double relErr = -1.; 
-            };
-        };
-        };
-        //
-        double avgRelativeError = totalRelativeError / totalValidData;
-        return avgRelativeError;
-    };
+    
 }

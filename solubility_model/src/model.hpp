@@ -80,10 +80,7 @@ namespace MODEL
     Tensor2DFloat64 SolubilityModelWrapper(Tensor1DFloat64 & temperatureData, Tensor1DFloat64 & pressureData, 
     ModelParams modelParams, double m_s, std::string temperatureUnit, std::string pressureUnit, 
     PROPERTY Property, PROPERTY_DIMENSION pressureDim, PROPERTY_DIMENSION temperatureDim);
-
-    double SolubilityModelRelativeError(Tensor1DFloat64 & temperatureData, Tensor1DFloat64 & pressureData, 
-    ModelParams modelParams, double m_s, std::string temperatureUnit, std::string pressureUnit, 
-    Tensor2DFloat64 modelTrueData);
+    
 }
 
 #endif

@@ -1,3 +1,6 @@
+#ifndef SOL_MODEL_DATA_HPP
+#define SOL_MODEL_DATA_HPP 
+
 #include "../../solubility_model/utils/utils.hpp"
 
 #pragma once 
@@ -34,3 +37,5 @@ namespace DATA
         PROPERTY_DIMENSION _temperatureDim = PROPERTY_DIMENSION::COL;
     };
 }
+
+#endif

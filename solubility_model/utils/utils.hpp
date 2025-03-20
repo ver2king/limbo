@@ -116,6 +116,26 @@ namespace UTILS
         if (elemIt != tensor1D.end() ) { return true; }
         else { return false; };
     };
+
+    template< typename T>
+    double ComputeAverageTensor2D( std::vector< std::vector<T> > & tensor2D )
+    {
+        double totalVal = 0.;
+        double totalValid = 0;
+        for (int i = 0; i < tensor2D.size(); ++ i )
+        {
+        for ( int j = 0; j < tensor2D[i].size(); ++ j)
+        {   
+            if ( tensor2D[i][j] > 0. ) { 
+            totalVal += tensor2D[i][j];
+            totalValid ++;
+            } else { 
+            totalVal += 0.;
+            }
+        };
+        };
+        return totalVal / totalValid;
+    }
     
     double LinearScaler( double inputVal, double lowerBound, double higherBound );
     Tensor1DFloat64 MakePressureData(double initialPressure, double pressureLimit );

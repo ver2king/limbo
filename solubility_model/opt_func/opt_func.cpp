@@ -46,6 +46,7 @@ namespace OPT_FUNCTION
             int colDim = modelPropData[0].size();
             //
             int totalValid = 0;
+            int totalExceedTol = 0;
             double totalVal = 0.;
             for ( int i = 0; i < rowDim; ++ i )
             {
@@ -57,22 +58,37 @@ namespace OPT_FUNCTION
                     totalValid += 0; 
                     totalVal += 0.; 
                 } else {
-                    totalValid += 1;
+                    double objVal = 0.;
+                    totalValid ++;
                     if ( _objFuncType == OBJ_FUNC_TYPE::MSE )
-                    { totalValid += std::pow( ( modelVal - expVal ), 2 ); }
+                    { objVal = std::pow( ( modelVal - expVal ), 2 ); }
                     else if ( _objFuncType == OBJ_FUNC_TYPE::RMSE )
-                    { totalValid += std::abs( modelVal - expVal ); }
+                    { objVal = std::abs( modelVal - expVal ); }
                     else if ( _objFuncType == OBJ_FUNC_TYPE::RE )
-                    { totalValid += std::abs( ( modelVal - expVal ) / expVal ); }
-                    else { totalValid += doubleInf; }
+                    { objVal = std::abs( ( modelVal - expVal ) / expVal ); }
+                    else { objVal = doubleNaN; }
+                    //
+                    totalVal += objVal;
+                    if ( objVal > _objFuncTol ) { 
+                        totalExceedTol ++;
+                    };
                 };
             };
             };
-            if ( totalVal == doubleInf )
-            { return doubleInf; }
-            else if ( totalValid == 0 )
-            { return doubleInf; }
-            else { return totalVal / totalValid; }; 
+            //
+            //__VAR_WITH_EXCEPTION__(totalValid, "TOTAL NUMBER OF OBJECTIVE POINTS.");
+            //__VAR_WITH_EXCEPTION__(totalExceedTol, "NUMBER OF OBJECTIVE VALUES THAT EXCEED TOLERANCE.");
+            //
+            if ( totalVal == doubleNaN )
+            { 
+                return doubleNaN;
+            } else if ( totalValid == 0 )
+            { 
+                return doubleNaN; 
+            }
+            else { 
+                return totalVal / totalValid; 
+            }; 
         };
     };
 
