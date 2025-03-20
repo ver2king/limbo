@@ -15,6 +15,20 @@ namespace MODEL
         return Val;
     };
 
+    std::pair< int, int > ConvertToPropertyIndexes(PROPERTY Property)
+    {
+        if ( Property == PROPERTY::H2LIQUID )
+        { return { 1, 0 }; }
+        else if  ( Property == PROPERTY::H2VAPOR )
+        { return { 0, 0 }; }
+        else if ( Property == PROPERTY::H2OLIQUID )
+        { return { 1, 1 }; }
+        else if ( Property == PROPERTY::H2OVAPOR )
+        { return { 0, 1 }; }
+        else 
+        { return { doubleInf, doubleInf }; };
+    };
+
     double GasPhaseEquilibrium(double T)
     {   
         double k_gas=2.99475+4.81373*pow(10, -3)*T-5.1773*pow(10, -5)*pow(T, 2)+1.19052*pow(10, -7)*pow(T, 3);
@@ -197,6 +211,14 @@ namespace MODEL
 
         return phaseCompFrac;
     }; 
+
+    double SolubilityModelWrapper(double T, double P, double m_s, std::string unitT, std::string unitP,
+    ModelParams modelParams, PROPERTY Property)
+    {
+        Tensor2DFloat64 phaseCompFrac = SolubilityModel(T, P, m_s, unitT, unitP, modelParams);
+        std::pair< int, int > propertyIndexes = ConvertToPropertyIndexes( Property );
+        return phaseCompFrac[propertyIndexes.first][propertyIndexes.second];
+    };
 
     double SolubilityModelRelativeError(Tensor1DFloat64 & temperatureData, Tensor1DFloat64 & pressureData, 
     ModelParams modelParams, double m_s, std::string temperatureUnit, std::string pressureUnit, 

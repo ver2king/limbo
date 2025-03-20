@@ -2,12 +2,12 @@
 
 namespace OPT_FUNCTION
 {
-    ObjectiveFunction::ObjectiveFunction(std::map< String, Tensor2DFloat64 > & modelData,
-    std::map< String, ExperimentalData > & experimentalData ):
+    ObjectiveFunction::ObjectiveFunction(std::map< PROPERTY, Data > & modelData,
+    std::map< PROPERTY, Data > & experimentalData ):
     _modelData( modelData ), _experimentalData ( experimentalData ) 
     { 
-        Tensor1DString modelProps;
-        Tensor1DString experimentalProps;
+        std::vector< PROPERTY > modelProps;
+        std::vector< PROPERTY > experimentalProps;
         for ( auto & i : modelData ) { modelProps.push_back( i.first ); };
         for ( auto & j : experimentalData ) { experimentalProps.push_back( j.first ); };
         _modelProps = modelProps;
@@ -22,7 +22,7 @@ namespace OPT_FUNCTION
         if ( _modelProps.size() != _experimentalProps.size() ) 
         { return false; }
         else {
-            Tensor2DFloat64 modelPropData = _modelData.at( _modelProps[0] );
+            Tensor2DFloat64 modelPropData = _modelData.at( _modelProps[0] )._propertyData;
             Tensor2DFloat64 expPropData = _experimentalData.at( _experimentalProps[0] )._propertyData;
             if ( modelPropData.size() == expPropData.size() && modelPropData[0].size == expPropData[0].size() )
             { return true; }
@@ -30,16 +30,16 @@ namespace OPT_FUNCTION
         };
     }
 
-    double ObjectiveFunction::computeSingleProperty( String & propName )
+    double ObjectiveFunction::computeSingleProperty( PROPERTY & propName )
     {   
         if ( verifyDimension() == false ) 
-        { return std::numeric_limits<double>::quiet_NaN(); }
-        else if ( FindElementInTensor1D<String>( propName, _modelProps ) == false ||
-        FindElementInTensor1D<String>( propName, _experimentalProps ) == false )
-        { return std::numeric_limits<double>::quiet_NaN();  }
+        { return doubleInf; }
+        else if ( FindElementInTensor1D<PROPERTY>( propName, _modelProps ) == false ||
+        FindElementInTensor1D<PROPERTY>( propName, _experimentalProps ) == false )
+        { return doubleInf;  }
         else 
         {   
-            Tensor2DFloat64 modelPropData = _modelData.at( propName );
+            Tensor2DFloat64 modelPropData = _modelData.at( propName )._propertyData;
             Tensor2DFloat64 expPropData = _experimentalData.at( propName )._propertyData;
             //
             int rowDim = modelPropData.size();
@@ -64,19 +64,19 @@ namespace OPT_FUNCTION
                     { totalValid += std::abs( modelVal - expVal ); }
                     else if ( _optFuncType == OBJ_FUNC_TYPE::RE )
                     { totalValid += std::abs( ( modelVal - expVal ) / expVal ); }
-                    else { otalValid += std::numeric_limits<double>::quiet_NaN(); }
+                    else { totalValid += doubleInf; }
                 };
             };
             };
-            if ( totalVal == std::numeric_limits<double>::quiet_NaN() )
-            { return std::numeric_limits<double>::quiet_NaN(); }
+            if ( totalVal == doubleInf )
+            { return doubleInf; }
             else if ( totalValid == 0 )
-            { return std::numeric_limits<double>::quiet_NaN(); }
+            { return doubleInf; }
             else { return totalVal / totalValid; }; 
         };
     };
 
-    double ObjectiveFunction::computeMultipleProperties( Tensor1DString & propNames )
+    double ObjectiveFunction::computeMultipleProperties( std::vector< PROPERTY > & propNames )
     {
         double objVal = 0;
         for ( int i = 0; i < propNames.sie(); ++ i )
@@ -93,15 +93,15 @@ namespace OPT_FUNCTION
     { return pressureData; };
 
     String ProblemParams::getTemperatureUnit()
-    { return problemUnits.at("T"); };
+    { return problemUnits.at( PROBLEM_UNIT::T ); };
 
-    String ProblemParams::getPressureUnit();
-    { return problemUnits.at("P"); };
+    String ProblemParams::getPressureUnit()
+    { return problemUnits.at( PROBLEM_UNIT::P ); };
     
     int ProblemParams::getNumberOfParams()
     { return numberOfParams; };
 
-    int ProblemParams::getNumberOfObjectives();
+    int ProblemParams::getNumberOfObjectives()
     { return numberOfObjectives; };
 
     Tensor1DFloat64 ProblemParams::getParamBounds(String & paramName )

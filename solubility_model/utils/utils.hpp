@@ -33,6 +33,9 @@ namespace CONST
     extern double const gasR;
     extern double const refP;
     extern double const saltV;
+
+    extern double const floatInf;
+    extern double const doubleInf;
 }
 
 namespace DATATYPE

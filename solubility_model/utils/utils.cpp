@@ -6,11 +6,9 @@ namespace CONST
     double const gasR = 83.1447;
     double const refP = 1.; // bar
     double const saltV = 2.; 
-}
 
-namespace LOG
-{
-    
+    double const floatInf = std::numeric_limits<float>::inifinity();
+    double const doubleInf = std::numeric_limits<double>::inifinity();
 }
 
 namespace UNIT

@@ -10,32 +10,33 @@ namespace OPT_FUNCTION
     using namespace MODEL;
     using namespace DATA;
     
+    enum class PROBLEM_UNIT { T, P };
     enum class OBJ_FUNC_TYPE { MSE, RMSE, RE };
 
     class ObjectiveFunction
     { 
         public:
-        ObjectiveFunction(std::map< String, Tensor2DFloat64 > & modelData,
-        std::map< String, ExperimentalData > & experimentalData );
+        ObjectiveFunction(std::map< PROPERTY, Data > & modelData,
+        std::map< PROPERTY, Data > & experimentalData );
         
         void setObjectiveFunctionType( OBJ_FUNC_TYPE & objFuncType );
 
         bool verifyDimension();
-        double computeSingleProperty( String & propName );
-        double computeMultipleProperties( Tensor1DString & propNames );
+        double computeSingleProperty( PROPERTY & propName );
+        double computeMultipleProperties( std::vector< PROPERTY > & propNames );
 
         public:
-        std::map< String, Tensor2DFloat64 > _modelData;
-        std::map< String, ExperimentalData > _experimentalData;
-        Tensor1DString _modelProps;
-        Tensor1DString _experimentalProps;
+        std::map< PROPERTY, Data > _modelData;
+        std::map< PROPERTY, Data > _experimentalData;
+        std::vector< PROPERTY > _modelProps;
+        std::vector< PROPERTY > _experimentalProps;
         //
         OBJ_FUNC_TYPE _optFuncType = OBJ_FUNC_TYPE::MSE;
     };
 
     struct ProblemParams 
     {
-        std::map< String, String > problemUnits;
+        std::map< PROBLEM_UNIT, String > problemUnits;
         Tensor1DFloat64 temperatureData;
         Tensor1DFloat64 pressureData;
         //
@@ -45,7 +46,7 @@ namespace OPT_FUNCTION
         //
         Tensor1DString propNames;
         std::map< String, Tensor1DFloat64 > allParamsBounds;
-        std::map< String, ExperimentalData> experimentalData;
+        std::map< PROPERTY, Data > experimentalData;
         //
         Tensor1DFloat64 getTemperatureData();
         Tensor1DFloat64 getPressureData();
@@ -55,7 +56,7 @@ namespace OPT_FUNCTION
         int getNumberOfParams();
         int getNumberOfObjectives();
         //
-        Tensor1DFloat64 getParamBounds(String & paramName );
+        Tensor1DFloat64 getParamBounds( String & paramName );
     };
 
     struct OptimFunc 

@@ -5,7 +5,7 @@
 #ifndef SOL_MODEL_HPP
 #define SOL_MODEL_HPP
 
-#include "../../solubility_model/utils/utils.hpp"
+#include "../../solubility_model/data/data.hpp"
 
 #pragma once
 
@@ -17,6 +17,7 @@ namespace MODEL
     using namespace DATATYPE;
     using namespace UNIT;
     using namespace UTILS;
+    using namespace DATA;
 
     //| Define indexes of phases and component
 
@@ -48,6 +49,8 @@ namespace MODEL
         Tensor1DFloat64 getMixtureCoefficients(); 
     };
 
+    std::pair< int, int > ConvertToPropertyIndexes(PROPERTY Property);
+
     double GasPhaseEquilibrium(double T);
     
     double LiquidPhaseEquilibrium(double T);
@@ -70,6 +73,9 @@ namespace MODEL
 
     Tensor2DFloat64 SolubilityModel(double T, double P, double m_s, std::string unitT, std::string unitP,
     ModelParams modelParams);
+
+    double SolubilityModelWrapper(double T, double P, double m_s, std::string unitT, std::string unitP,
+    ModelParams modelParams, PROPERTY Property);
 
     double SolubilityModelRelativeError(Tensor1DFloat64 & temperatureData, Tensor1DFloat64 & pressureData, 
     ModelParams modelParams, double m_s, std::string temperatureUnit, std::string pressureUnit, 

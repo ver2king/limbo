@@ -11,10 +11,10 @@ namespace DATA
     enum class PROPERTY { H2LIQUID, H2VAPOR, H2OLIQUID, H2OVAPOR }; 
     enum class PROPERTY_DIMENSION { ROW, COL };
 
-    class ExperimentalData
+    class Data
     {   
         public:
-        ExperimentalData(Tensor1DFloat64 & pressureData, Tensor1DFloat64 & temperatureData, 
+        Data(Tensor1DFloat64 & pressureData, Tensor1DFloat64 & temperatureData, 
         Tensor2DFloat64 & propertyData);
         
         bool verifyDimension();
@@ -29,9 +29,8 @@ namespace DATA
         Tensor1DFloat64 _pressureData;
         Tensor1DFloat64 _temperatureData;
         Tensor2DFloat64 _propertyData;
-        #
+        //
         PROPERTY_DIMENSION _pressureDim = PROPERTY_DIMENSION::ROW;
         PROPERTY_DIMENSION _temperatureDim = PROPERTY_DIMENSION::COL;
-        PROPERTY _Property = PROPERTY::H2LIQUID; 
     };
 }
