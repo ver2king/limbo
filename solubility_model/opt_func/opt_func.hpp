@@ -35,20 +35,28 @@ namespace OPT_FUNCTION
 
     struct ProblemParams 
     {
-        Tensor1DString problemUnits;
+        std::map< String, String > problemUnits;
         Tensor1DFloat64 temperatureData;
         Tensor1DFloat64 pressureData;
         //
         int numberOfParams;
-        int numberOfOjectives;
+        int numberOfObjectives;
         double const saltMolarity = 0.;
         //
         Tensor1DString propNames;
-        std::vector< Tensor1DFloat64 > paramBounds;
-        std::map<String, ExperimentalData> experimentalData;
+        std::map< String, Tensor1DFloat64 > allParamsBounds;
+        std::map< String, ExperimentalData> experimentalData;
+        //
+        Tensor1DFloat64 getTemperatureData();
+        Tensor1DFloat64 getPressureData();
+        String getTemperatureUnit();
+        String getPressureUnit();
+        //
+        int getNumberOfParams();
+        int getNumberOfObjectives();
+        //
+        Tensor1DFloat64 getParamBounds(String & paramName );
     };
-
-    double ProblemEval();
 
     struct OptimFunc 
     {

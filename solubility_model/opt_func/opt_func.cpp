@@ -85,4 +85,26 @@ namespace OPT_FUNCTION
         };
         return objVal;
     }
+
+    Tensor1DFloat64 ProblemParams::getTemperatureData()
+    { return temperatureData; };
+
+    Tensor1DFloat64 ProblemParams::getPressureData()
+    { return pressureData; };
+
+    String ProblemParams::getTemperatureUnit()
+    { return problemUnits.at("T"); };
+
+    String ProblemParams::getPressureUnit();
+    { return problemUnits.at("P"); };
+    
+    int ProblemParams::getNumberOfParams()
+    { return numberOfParams; };
+
+    int ProblemParams::getNumberOfObjectives();
+    { return numberOfObjectives; };
+
+    Tensor1DFloat64 ProblemParams::getParamBounds(String & paramName )
+    { return allParamsBounds.at( paramName ); };
+
 }
