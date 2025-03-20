@@ -1,4 +1,6 @@
 #include "../../solubility_model/src/model.hpp"
+#include "../../solubility_model/data/data.hpp"
+
 #include "../../src/limbo/tools/macros.hpp"
 
 #pragma once
@@ -6,16 +8,52 @@
 namespace OPT_FUNCTION
 {   
     using namespace MODEL;
+    using namespace DATA;
     
-    struct ProblemParams 
-    {
+    enum class OBJ_FUNC_TYPE { MSE, RMSE, RE };
+
+    class ObjectiveFunction
+    { 
+        public:
+        ObjectiveFunction(std::map< String, Tensor2DFloat64 > & modelData,
+        std::map< String, ExperimentalData > & experimentalData );
         
+        void setObjectiveFunctionType( OBJ_FUNC_TYPE & objFuncType );
+
+        bool verifyDimension();
+        double computeSingleProperty( String & propName );
+        double computeMultipleProperties( Tensor1DString & propNames );
+
+        public:
+        std::map< String, Tensor2DFloat64 > _modelData;
+        std::map< String, ExperimentalData > _experimentalData;
+        Tensor1DString _modelProps;
+        Tensor1DString _experimentalProps;
+        //
+        OBJ_FUNC_TYPE _optFuncType = OBJ_FUNC_TYPE::MSE;
     };
 
-    int const numberOfParams = 4;
-    int const numberOfOpt = 1;
+    struct ProblemParams 
+    {
+        Tensor1DString problemUnits;
+        Tensor1DFloat64 temperatureData;
+        Tensor1DFloat64 pressureData;
+        //
+        int numberOfParams;
+        int numberOfOjectives;
+        double const saltMolarity = 0.;
+        //
+        Tensor1DString propNames;
+        std::vector< Tensor1DFloat64 > paramBounds;
+        std::map<String, ExperimentalData> experimentalData;
+    };
 
-    struct OptimFunc {
+    double ProblemEval();
+
+    struct OptimFunc 
+    {
+        int const numberOfParams = 4;
+        int const numberOfOpt = 1;
         BO_PARAM(size_t, dim_in, numberOfParams);
         BO_PARAM(size_t, dim_out, numberOfOpt);
     

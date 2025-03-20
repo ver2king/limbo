@@ -100,6 +100,14 @@ namespace UTILS
     Tensor2DFloat64 ReadMatrixFile(std::ifstream &f, int &row, int &col);
     Tensor2DFloat64 ReadMatrixFileMultiDelimiters(std::ifstream &f, int &row, int &col);
 
+    template< typename T >
+    bool FindElementInTensor1D( T elemVal, std::vector<T> & tensor1D )
+    {
+        auto elemIt = std::find( tensor1D.begin(), tensor1D.end(), elemVal );
+        if (elemIt != tensor1D.end() ) { return true; }
+        else { return false; };
+    };
+    
     double LinearScaler( double inputVal, double lowerBound, double higherBound );
     Tensor1DFloat64 CubicEquationSolver(Tensor1DFloat64 cubicCoeffs);
 }
