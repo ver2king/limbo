@@ -7,6 +7,11 @@ namespace OPT_FUNCTION
 {   
     using namespace MODEL;
     
+    struct ProblemParams 
+    {
+        
+    };
+
     int const numberOfParams = 4;
     int const numberOfOpt = 1;
 
@@ -29,7 +34,7 @@ namespace OPT_FUNCTION
                 if ( initP < 30 ) { initP += 1.; }
                 else { initP += 5.; };
             };
-            std::ifstream f("/home/ver2king/Desktop/limbo/solubility_model/h2_h2o_yh2o.txt");
+            std::ifstream f("/home/v183p176/Desktop/limbo/solubility_model/h2_h2o_yh2o.txt");
             int row = dataP.size(); int col = dataT.size();
             Tensor2DFloat64 waterVaporPhaseData = ReadMatrixFile(f, row, col);
             assert( waterVaporPhaseData.size() == row);
