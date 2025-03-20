@@ -7,8 +7,10 @@ namespace CONST
     double const refP = 1.; // bar
     double const saltV = 2.; 
 
-    double const floatInf = std::numeric_limits<float>::inifinity();
-    double const doubleInf = std::numeric_limits<double>::inifinity();
+    double const floatInf = std::numeric_limits<float>::infinity();
+    double const doubleInf = std::numeric_limits<double>::infinity();
+    double const floatNaN = std::numeric_limits<float>::quiet_NaN();
+    double const doubleNaN = std::numeric_limits<double>::quiet_NaN();
 }
 
 namespace UNIT
@@ -136,7 +138,6 @@ namespace UTILS
     //
     if (f.is_open())
     {
-    int val_Idx = 0;
     while ( std::getline(f, data) )
     {   
         std::sregex_token_iterator first{data.begin(), data.end(), re, -1}; 
@@ -162,6 +163,19 @@ namespace UTILS
         };
     };
     return val;
+    };
+
+    Tensor1DFloat64 MakePressureData(double initialPressure, double pressureLimit )
+    {
+        Tensor1DFloat64 pressureData;
+        double currentPressure = initialPressure;
+        while ( currentPressure <= pressureLimit )
+        {
+            pressureData.push_back(currentPressure);
+            if ( currentPressure < 30 ) { currentPressure += 1.; }
+            else { currentPressure += 5.; };
+        };
+        return pressureData;
     };
 
     double LinearScaler( double inputVal, double lowerBound, double higherBound )

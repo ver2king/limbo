@@ -8,6 +8,7 @@
 namespace OPT_FUNCTION
 {   
     using namespace MODEL;
+    using namespace LOG;
     using namespace DATA;
     
     enum class PROBLEM_UNIT { T, P };
@@ -31,7 +32,7 @@ namespace OPT_FUNCTION
         std::vector< PROPERTY > _modelProps;
         std::vector< PROPERTY > _experimentalProps;
         //
-        OBJ_FUNC_TYPE _optFuncType = OBJ_FUNC_TYPE::MSE;
+        OBJ_FUNC_TYPE _objFuncType = OBJ_FUNC_TYPE::MSE;
     };
 
     struct ProblemParams 
@@ -39,74 +40,84 @@ namespace OPT_FUNCTION
         std::map< PROBLEM_UNIT, String > problemUnits;
         Tensor1DFloat64 temperatureData;
         Tensor1DFloat64 pressureData;
+        double saltMolarity = 0.;
         //
-        int numberOfParams;
-        int numberOfObjectives;
-        double const saltMolarity = 0.;
-        //
-        Tensor1DString propNames;
+        Tensor1DString paramNames;
         std::map< String, Tensor1DFloat64 > allParamsBounds;
-        std::map< PROPERTY, Data > experimentalData;
+        //
+        std::vector< PROPERTY > propNames;
         //
         Tensor1DFloat64 getTemperatureData();
         Tensor1DFloat64 getPressureData();
         String getTemperatureUnit();
         String getPressureUnit();
         //
-        int getNumberOfParams();
-        int getNumberOfObjectives();
-        //
+        ProblemParams(  std::map< PROBLEM_UNIT, String > _problemUnits,
+        Tensor1DFloat64 _temperatureData,
+        Tensor1DFloat64 _pressureData, 
+        Tensor1DString _paramNames,
+        std::map< String, Tensor1DFloat64 > _allParamsBounds,
+        std::vector< PROPERTY > _propNames );
+
         Tensor1DFloat64 getParamBounds( String & paramName );
     };
 
-    struct OptimFunc 
+    struct ModelPrediction
     {
-        int const numberOfParams = 4;
-        int const numberOfOpt = 1;
-        BO_PARAM(size_t, dim_in, numberOfParams);
-        BO_PARAM(size_t, dim_out, numberOfOpt);
-    
-        Eigen::VectorXd operator()(const Eigen::VectorXd& inputParams) const
-        {   
-            /// Initial set-up data for the solubility model
-            String unitT = "K";
-            String unitP = "Bar";
-            double m_s = 0.;
-            Tensor1DFloat64 dataT = {298.15, 323.15, 348.15, 373.15, 398.15, 423.15};
-            Tensor1DFloat64 dataP;
-            double initP = 2.;
-            while ( initP <= 200. )
-            {
-                dataP.push_back(initP);
-                if ( initP < 30 ) { initP += 1.; }
-                else { initP += 5.; };
+        ProblemParams problemParams;
+        PROPERTY_DIMENSION pressureDim = PROPERTY_DIMENSION::ROW;
+        PROPERTY_DIMENSION temperatureDim = PROPERTY_DIMENSION::COL;
+
+        ModelPrediction( ProblemParams & _problemParams );
+
+        std::map< PROPERTY, Data > operator()( const Eigen::VectorXd& inputParams )
+        {
+            std::map< PROPERTY, Data > modelData;
+            //
+            __CHECK_POINT_WITH_MSG__("GET DATA");
+
+            Tensor1DFloat64 temperatureData = problemParams.temperatureData;
+            Tensor1DFloat64 pressureData = problemParams.pressureData;
+            double saltMolarity = problemParams.saltMolarity;
+            String temperatureUnit = problemParams.getTemperatureUnit();
+            String pressureUnit = problemParams.getPressureUnit();
+            //
+            __CHECK_POINT_WITH_MSG__("GET PARAM BOUNDS");
+
+            Tensor1DFloat64 param0Bounds = problemParams.getParamBounds( problemParams.paramNames[0] );
+            Tensor1DFloat64 param1Bounds = problemParams.getParamBounds( problemParams.paramNames[1] );
+            Tensor1DFloat64 param2Bounds = problemParams.getParamBounds( problemParams.paramNames[2] );
+            Tensor1DFloat64 param3Bounds = problemParams.getParamBounds( problemParams.paramNames[3] );
+            //
+            __CHECK_POINT_WITH_MSG__("SET MODEL PARAMS");
+            
+            ModelParams modelParams = { LinearScaler(inputParams(0), param0Bounds[0], param0Bounds[1]),
+            LinearScaler(inputParams(1), param1Bounds[0], param1Bounds[1]),
+            LinearScaler(inputParams(2), param2Bounds[0], param2Bounds[1]),
+            LinearScaler(inputParams(3), param3Bounds[0], param3Bounds[1]) };
+            //
+            __CHECK_POINT_WITH_MSG__("COMPUTE OBJECTIVE FUNCTION");
+
+            for ( int i = 0; i < problemParams.propNames.size(); ++ i)
+            {   
+                __CHECK_POINT_WITH_MSG__("GET PROPERTY");
+
+                PROPERTY Property = problemParams.propNames[i];
+                
+                __CHECK_POINT_WITH_MSG__("COMPUTE MODEL PRED");
+                Tensor2DFloat64 propertyDataMatrix = SolubilityModelWrapper(temperatureData, pressureData, 
+                modelParams, saltMolarity, temperatureUnit, pressureUnit, 
+                Property, pressureDim, temperatureDim);
+
+                __CHECK_POINT_WITH_MSG__("SET MODEL DATA");
+                DATA::Data propertyData( pressureData, temperatureData, propertyDataMatrix );
+                std::cout << propertyDataMatrix.size() << " , " << propertyDataMatrix[0].size() << "\n";
+                
+                __CHECK_POINT_WITH_MSG__("INSERT MODEL DATA");
+                modelData.insert( { Property, propertyData } );
             };
-            std::ifstream f("/home/v183p176/Desktop/limbo/solubility_model/h2_h2o_yh2o.txt");
-            int row = dataP.size(); int col = dataT.size();
-            Tensor2DFloat64 waterVaporPhaseData = ReadMatrixFile(f, row, col);
-            assert( waterVaporPhaseData.size() == row);
-            assert( waterVaporPhaseData[0].size() == col);
-
-            /// Define the lower and higher bounds for all input coeffients
-            double lowerRate = 0.95; double higherRate = 1.05; 
-            Tensor1DFloat64 h2ACoeffBounds = { 1441753.379 * lowerRate, 1441753.379 * higherRate };
-            Tensor1DFloat64 h2BCoeffBounds = { 18.417 * lowerRate, 18.417 * higherRate };
-            Tensor1DFloat64 h2oACoeffBounds = { 142666655.8 * lowerRate, 142666655.8 * higherRate };
-            Tensor1DFloat64 h2oBCoeffBounds = { 21.127 * lowerRate, 21.127 * higherRate };
-
-            /// Parse the coefficients 
-            ModelParams modelParams = { LinearScaler(inputParams(0), h2ACoeffBounds[0], h2ACoeffBounds[1]),
-            LinearScaler(inputParams(1), h2BCoeffBounds[0], h2BCoeffBounds[1]),
-            LinearScaler(inputParams(2), h2oACoeffBounds[0], h2oACoeffBounds[1]),
-            LinearScaler(inputParams(3), h2oBCoeffBounds[0], h2oBCoeffBounds[1]) };
-
-            /// Compute the objective value
-            double avgRelativeErr = SolubilityModelRelativeError(dataT, dataP, modelParams, m_s, unitT, unitP, waterVaporPhaseData);
-
-            /// Define the final objective value
-            Eigen::VectorXd res(1);
-            res(0) = - avgRelativeErr;
-            return res;
+            return modelData;
         };
     };
+
 }

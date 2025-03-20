@@ -18,15 +18,15 @@ namespace MODEL
     std::pair< int, int > ConvertToPropertyIndexes(PROPERTY Property)
     {
         if ( Property == PROPERTY::H2LIQUID )
-        { return { 1, 0 }; }
+        { return std::make_pair(1, 0); }
         else if  ( Property == PROPERTY::H2VAPOR )
-        { return { 0, 0 }; }
+        { return std::make_pair(0, 0); }
         else if ( Property == PROPERTY::H2OLIQUID )
-        { return { 1, 1 }; }
+        { return std::make_pair(1, 1); }
         else if ( Property == PROPERTY::H2OVAPOR )
-        { return { 0, 1 }; }
+        { return std::make_pair(0, 1); }
         else 
-        { return { doubleInf, doubleInf }; };
+        { return std::make_pair(-1, -1); };
     };
 
     double GasPhaseEquilibrium(double T)
@@ -212,13 +212,64 @@ namespace MODEL
         return phaseCompFrac;
     }; 
 
-    double SolubilityModelWrapper(double T, double P, double m_s, std::string unitT, std::string unitP,
+    double ComponentPhaseFractionsWrapper(double T, double P, double m_s, std::string unitT, std::string unitP,
     ModelParams modelParams, PROPERTY Property)
-    {
+    {   
         Tensor2DFloat64 phaseCompFrac = SolubilityModel(T, P, m_s, unitT, unitP, modelParams);
         std::pair< int, int > propertyIndexes = ConvertToPropertyIndexes( Property );
-        return phaseCompFrac[propertyIndexes.first][propertyIndexes.second];
+        double propertyVal = phaseCompFrac[propertyIndexes.first][propertyIndexes.second];
+        return propertyVal;
     };
+
+    Tensor2DFloat64 SolubilityModelWrapper(Tensor1DFloat64 & temperatureData, Tensor1DFloat64 & pressureData, 
+    ModelParams modelParams, double m_s, std::string temperatureUnit, std::string pressureUnit, 
+    PROPERTY Property, PROPERTY_DIMENSION pressureDim, PROPERTY_DIMENSION temperatureDim)
+    {
+        int _pressureDim = pressureData.size();
+        int _temperatureDim = temperatureData.size();
+
+        Tensor2DFloat64 propertyData(1, Tensor1DFloat64(1, doubleNaN ));
+
+        if ( pressureDim == PROPERTY_DIMENSION::ROW && temperatureDim == PROPERTY_DIMENSION::COL ) 
+        { 
+            propertyData.resize( _pressureDim, Tensor1DFloat64( _temperatureDim, doubleNaN ) );
+        } else if ( pressureDim == PROPERTY_DIMENSION::COL && temperatureDim == PROPERTY_DIMENSION::ROW )
+        {
+            propertyData.resize( _temperatureDim, Tensor1DFloat64( _pressureDim, doubleNaN ) );
+        } else 
+        { 
+            #warning "Can not resize property data based on given dimension properties."
+            exit(1);
+        };
+
+        if ( pressureDim == PROPERTY_DIMENSION::ROW && temperatureDim == PROPERTY_DIMENSION::COL ) 
+        {   
+            for (Index ip = 0; ip < _pressureDim; ++ ip)
+            {
+            for ( Index it = 0; it < _temperatureDim; ++ it)
+            {
+            double propertyVal = ComponentPhaseFractionsWrapper(temperatureData[it], pressureData[ip], m_s, 
+            temperatureUnit, pressureUnit, modelParams, Property);
+            propertyData[ip][it] = propertyVal;
+            };
+            };
+        } else 
+        {   
+            for (Index it = 0; it < _temperatureDim; ++ it)
+            {
+            for ( Index ip = 0; ip < _pressureDim; ++ ip)
+            {
+            double propertyVal = ComponentPhaseFractionsWrapper(temperatureData[it], pressureData[ip], m_s, 
+            temperatureUnit, pressureUnit, modelParams, Property);
+            propertyData[it][ip] = propertyVal;
+            };
+            };
+        };
+
+        std::cout << propertyData.size() << " , " << propertyData[0].size() << "\n";
+        return propertyData;
+    };
+
 
     double SolubilityModelRelativeError(Tensor1DFloat64 & temperatureData, Tensor1DFloat64 & pressureData, 
     ModelParams modelParams, double m_s, std::string temperatureUnit, std::string pressureUnit, 

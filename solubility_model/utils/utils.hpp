@@ -36,6 +36,8 @@ namespace CONST
 
     extern double const floatInf;
     extern double const doubleInf;
+    extern double const floatNaN;
+    extern double const doubleNaN;
 }
 
 namespace DATATYPE
@@ -56,6 +58,10 @@ namespace DATATYPE
 namespace LOG
 {
     using namespace DATATYPE; 
+
+    #define __CHECK_POINT__ std::cerr << "THROW CHECK POINT .\n"
+
+    #define __CHECK_POINT_WITH_MSG__( MSG ) std::cerr << "THROW CHECK POINT WITH MSG: " << MSG << "\n"
 
     #define __VAR_WITH_EXCEPTION__(VAR, MSG) std::cerr << "THE VARIABLE " << VAR << " HAS EXCEPTION: " << MSG << "\n"
 
@@ -112,6 +118,7 @@ namespace UTILS
     };
     
     double LinearScaler( double inputVal, double lowerBound, double higherBound );
+    Tensor1DFloat64 MakePressureData(double initialPressure, double pressureLimit );
     Tensor1DFloat64 CubicEquationSolver(Tensor1DFloat64 cubicCoeffs);
 }
 

@@ -4,7 +4,7 @@ namespace DATA
 {
     Data::Data(Tensor1DFloat64 & pressureData, Tensor1DFloat64 & temperatureData, 
     Tensor2DFloat64 & propertyData): _pressureData(pressureData), _temperatureData(temperatureData),
-    _propertyData(_propertyData) { };
+    _propertyData(propertyData) { };
     
     void Data::setPressureDimension( PROPERTY_DIMENSION pressureDim )
     { _pressureDim = pressureDim; };
