@@ -11,26 +11,29 @@ namespace OPT_FUNCTION
     using namespace LOG;
     using namespace DATA;
     
+    typedef std::pair< String, PROPERTY > DataIdentifier;
     enum class PROBLEM_UNIT { T, P };
     enum class OBJ_FUNC_TYPE { MSE, RMSE, RE };
 
     class ObjectiveFunction
     { 
         public:
-        ObjectiveFunction(std::map< PROPERTY, Data > & modelData,
-        std::map< PROPERTY, Data > & experimentalData );
+        ObjectiveFunction(std::map< DataIdentifier, Data > & modelData,
+        std::map< DataIdentifier, Data > & experimentalData );
         
         void setObjectiveFunctionType( OBJ_FUNC_TYPE & objFuncType );
 
         bool verifyDimension();
-        double computeSingleProperty( PROPERTY & propName );
-        double computeMultipleProperties( std::vector< PROPERTY > & propNames );
+        double computeSingleProperty( DataIdentifier & dataInd );
+        double computeMultipleProperties( std::vector< DataIdentifier > & dataInds );
 
         public:
-        std::map< PROPERTY, Data > _modelData;
-        std::map< PROPERTY, Data > _experimentalData;
+        std::map< DataIdentifier, Data > _modelData;
+        std::map< DataIdentifier, Data > _experimentalData;
         std::vector< PROPERTY > _modelProps;
         std::vector< PROPERTY > _experimentalProps;
+        std::vector< String > _modelPropNames;
+        std::vector< String > _experimentalPropNames;
         //
         OBJ_FUNC_TYPE _objFuncType = OBJ_FUNC_TYPE::RE;
         double const _objFuncTol = 0.05;
@@ -46,7 +49,8 @@ namespace OPT_FUNCTION
         Tensor1DString paramNames;
         std::map< String, Tensor1DFloat64 > allParamsBounds;
         //
-        std::vector< PROPERTY > propNames;
+        std::vector< PROPERTY > allProps;
+        std::vector< String > allPropNames;
         //
         Tensor1DFloat64 getTemperatureData();
         Tensor1DFloat64 getPressureData();
@@ -58,7 +62,8 @@ namespace OPT_FUNCTION
         Tensor1DFloat64 _pressureData, 
         Tensor1DString _paramNames,
         std::map< String, Tensor1DFloat64 > _allParamsBounds,
-        std::vector< PROPERTY > _propNames );
+        std::vector< PROPERTY > _allProps,
+        std::vector < String > _allPropNames );
 
         Tensor1DFloat64 getParamBounds( String & paramName );
     };
@@ -71,9 +76,9 @@ namespace OPT_FUNCTION
 
         ModelPrediction( ProblemParams & _problemParams );
 
-        std::map< PROPERTY, Data > operator()( const Eigen::VectorXd& inputParams )
+        std::map< DataIdentifier, Data > operator()( const Eigen::VectorXd& inputParams )
         {
-            std::map< PROPERTY, Data > modelData;
+            std::map< DataIdentifier, Data > modelData;
             //
             Tensor1DFloat64 temperatureData = problemParams.temperatureData;
             Tensor1DFloat64 pressureData = problemParams.pressureData;
@@ -91,14 +96,17 @@ namespace OPT_FUNCTION
             LinearScaler(inputParams(2), param2Bounds[0], param2Bounds[1]),
             LinearScaler(inputParams(3), param3Bounds[0], param3Bounds[1]) };
             //
-            for ( int i = 0; i < problemParams.propNames.size(); ++ i)
+            for ( int i = 0; i < problemParams.allPropNames.size(); ++ i)
             {   
-                PROPERTY Property = problemParams.propNames[i];
+                PROPERTY Property = problemParams.allProps[i];
+                String propertyName = problemParams.allPropNames[i];
+                // 
                 Tensor2DFloat64 propertyDataMatrix = SolubilityModelWrapper(temperatureData, pressureData, 
                 modelParams, saltMolarity, temperatureUnit, pressureUnit, 
                 Property, pressureDim, temperatureDim);
                 DATA::Data propertyData( pressureData, temperatureData, propertyDataMatrix );
-                modelData.insert( { Property, propertyData } );
+                DataIdentifier dataInd = { propertyName, Property };
+                modelData.insert( { dataInd, propertyData } );
             };
             return modelData;
         };

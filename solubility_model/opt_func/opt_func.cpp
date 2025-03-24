@@ -2,16 +2,26 @@
 
 namespace OPT_FUNCTION
 {
-    ObjectiveFunction::ObjectiveFunction(std::map< PROPERTY, Data > & modelData,
-    std::map< PROPERTY, Data > & experimentalData ):
+    ObjectiveFunction::ObjectiveFunction(std::map< DataIdentifier, Data > & modelData,
+    std::map< DataIdentifier, Data > & experimentalData ):
     _modelData( modelData ), _experimentalData ( experimentalData ) 
     { 
         std::vector< PROPERTY > modelProps;
         std::vector< PROPERTY > experimentalProps;
-        for ( auto & i : modelData ) { modelProps.push_back( i.first ); };
-        for ( auto & j : experimentalData ) { experimentalProps.push_back( j.first ); };
+        std::vector< String > modelPropNames;
+        std::vector< String > experimentalPropNames;
+        for ( auto & i : modelData ) { 
+            modelProps.push_back( i.first.second ); 
+            modelPropNames.push_back( i.first.first );
+        };
+        for ( auto & j : experimentalData ) { 
+            experimentalProps.push_back( j.first.second ); 
+            experimentalPropNames.push_back( j.first.first );
+        };
         _modelProps = modelProps;
         _experimentalProps = experimentalProps;
+        _modelPropNames = modelPropNames;
+        _experimentalPropNames = experimentalPropNames;
     };
 
     void ObjectiveFunction::setObjectiveFunctionType( OBJ_FUNC_TYPE & objFuncType )
@@ -22,25 +32,28 @@ namespace OPT_FUNCTION
         if ( _modelProps.size() != _experimentalProps.size() ) 
         { return false; }
         else {
-            Tensor2DFloat64 modelPropData = _modelData.at( _modelProps[0] )._propertyData;
-            Tensor2DFloat64 expPropData = _experimentalData.at( _experimentalProps[0] )._propertyData;
+            DataIdentifier modelInd = { _modelPropNames[0], _modelProps[0] };
+            DataIdentifier experimentalInd = { _experimentalPropNames[0], _experimentalProps[0] };
+            Tensor2DFloat64 modelPropData = _modelData.at( modelInd )._propertyData;
+            Tensor2DFloat64 expPropData = _experimentalData.at( experimentalInd )._propertyData;
             if ( modelPropData.size() == expPropData.size() && modelPropData[0].size() == expPropData[0].size() )
             { return true; }
             else { return false; };
         };
     };
 
-    double ObjectiveFunction::computeSingleProperty( PROPERTY & propName )
-    {   
+    double ObjectiveFunction::computeSingleProperty( DataIdentifier & dataInd )
+    {    
+        String propName = dataInd.first;
         if ( verifyDimension() == false ) 
         { return doubleInf; }
-        else if ( FindElementInTensor1D<PROPERTY>( propName, _modelProps ) == false ||
-        FindElementInTensor1D<PROPERTY>( propName, _experimentalProps ) == false )
+        else if ( FindElementInTensor1D<String>( propName, _modelPropNames ) == false ||
+        FindElementInTensor1D<String>( propName, _experimentalPropNames ) == false )
         { return doubleInf;  }
         else 
         {   
-            Tensor2DFloat64 modelPropData = _modelData.at( propName )._propertyData;
-            Tensor2DFloat64 expPropData = _experimentalData.at( propName )._propertyData;
+            Tensor2DFloat64 modelPropData = _modelData.at( dataInd )._propertyData;
+            Tensor2DFloat64 expPropData = _experimentalData.at( dataInd )._propertyData;
             //
             int rowDim = modelPropData.size();
             int colDim = modelPropData[0].size();
@@ -92,12 +105,12 @@ namespace OPT_FUNCTION
         };
     };
 
-    double ObjectiveFunction::computeMultipleProperties( std::vector< PROPERTY > & propNames )
+    double ObjectiveFunction::computeMultipleProperties( std::vector< DataIdentifier > & dataInds )
     {
         double objVal = 0;
-        for ( int i = 0; i < propNames.size(); ++ i )
+        for ( int i = 0; i < dataInds.size(); ++ i )
         {
-            objVal += computeSingleProperty( propNames[i] );
+            objVal += computeSingleProperty( dataInds[i] );
         };
         return objVal;
     }
@@ -105,14 +118,15 @@ namespace OPT_FUNCTION
     ProblemParams::ProblemParams(  std::map< PROBLEM_UNIT, String > _problemUnits,
     Tensor1DFloat64 _temperatureData, Tensor1DFloat64 _pressureData, 
     Tensor1DString _paramNames, std::map< String, Tensor1DFloat64 > _allParamsBounds,
-    std::vector< PROPERTY > _propNames )
+    std::vector< PROPERTY > _allProps, std::vector < String > _allPropNames )
     {
         problemUnits = _problemUnits;
         temperatureData = _temperatureData;
         pressureData = _pressureData;
         paramNames = _paramNames;
         allParamsBounds = _allParamsBounds;
-        propNames = _propNames;
+        allProps = _allProps;
+        allPropNames =  _allPropNames;
     };
 
     Tensor1DFloat64 ProblemParams::getTemperatureData()
