@@ -13,6 +13,32 @@ namespace CONST
     double const doubleNaN = std::numeric_limits<double>::quiet_NaN();
 }
 
+
+namespace LOG 
+{
+    void PrintTensorString1D(std::vector< String > & Tensor)
+    {
+        for (DATATYPE::Index i=0; i < Tensor.size(); ++i)
+        {
+            printf( "%s", Tensor[i].c_str() ); printf(" , ");
+        };
+        printf("\n");
+    };
+
+    void PrintTensorString2D(std::vector< std::vector< String > > & Tensor)
+    {
+        for (DATATYPE::Index i=0; i<Tensor.size(); ++i)
+        {
+            for (DATATYPE::Index j=0; j<Tensor[0].size(); ++j)
+            {
+                printf( "%s", Tensor[i][j].c_str() ); printf(" , ");
+            };
+            printf("\n");
+        };
+        printf("\n");
+    };
+}
+
 namespace UNIT
 {
     int ConvertPressureUnit(std::pair<std::string, std::string> unitPair)

@@ -5,6 +5,8 @@
 #ifndef SOL_MODEL_UTILS_HPP
 #define SOL_MODEL_UTILS_HPP
 
+#include <cstdlib>
+
 #include <vector>
 #include <map>
 #include <cmath>
@@ -66,6 +68,9 @@ namespace LOG
     #define __VAR_WITH_EXCEPTION__(VAR, MSG) std::cerr << "THE VARIABLE " << VAR << " HAS EXCEPTION: " << MSG << "\n"
 
     #define __VAR_WITH_CONDITIONS__( VAR, NAME, MSG, CONDITION1, CONDITION2 ) std::cerr << "THE VARIABLE "  << NAME << ", VALUE: " << VAR << " HAS EXCEPTION: " << MSG <<  " AT (P, T) CONDITIONS: " << CONDITION1 << ", " << CONDITION2 << "\n"
+
+    void PrintTensorString1D(std::vector< String > & Tensor);
+    void PrintTensorString2D(std::vector< std::vector< String > > & Tensor);
 
     template<typename T>
     void PrintTensor1D(std::vector < T > Tensor)

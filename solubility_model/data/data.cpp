@@ -3,7 +3,8 @@
 namespace DATA
 {
     Data::Data(Tensor1DFloat64 & pressureData, Tensor1DFloat64 & temperatureData, 
-    Tensor2DFloat64 & propertyData): _pressureData(pressureData), _temperatureData(temperatureData),
+    Tensor2DFloat64 & propertyData): 
+    _pressureData(pressureData), _temperatureData(temperatureData),
     _propertyData(propertyData) { };
     
     void Data::setPressureDimension( PROPERTY_DIMENSION pressureDim )
@@ -40,8 +41,18 @@ namespace DATA
         };
     };
 
+    void Data::setPressureData( Tensor1DFloat64 & pressureData )
+    { _pressureData = pressureData; };
+
+    void Data::setTemperatureData( Tensor1DFloat64 & temperatureData )
+    { _temperatureData = temperatureData; };
+
+    void Data::setPropertyData( Tensor2DFloat64 & propertyData )
+    { _propertyData = propertyData; };
+
     Tensor1DFloat64 Data::getPressureData() { return _pressureData; };
     Tensor1DFloat64 Data::getTemperatureData() { return _temperatureData; };
+    Tensor2DFloat64 Data::getPropertyData() { return _propertyData; };
 
     double Data::getPropertyData( double T, double P ) 
     {   
@@ -62,5 +73,133 @@ namespace DATA
             propertyVal = doubleNaN;
         };
         return propertyVal;
+    };
+
+    ExperimentalSolubilityDataBlock::ExperimentalSolubilityDataBlock( Tensor2DString solBlockRawData ):
+    _solBlockRawData( solBlockRawData ) { };
+
+    void ExperimentalSolubilityDataBlock::getSolubilityData()
+    {   
+        PrintTensorString2D( _solBlockRawData );
+        int const temperatureDim = 1;
+        int const pressureDim = _solBlockRawData.size();
+        //
+        _temperatureData.resize( temperatureDim );
+        _pressureData.resize( pressureDim );
+        _propertyData.resize( pressureDim );
+        //
+        double temperatureVal = std::stod( _solBlockRawData[0][0] );
+        _temperatureData[0] = temperatureVal;
+        //
+        for ( int ip = 0; ip < pressureDim; ++ ip )
+        {   
+            _propertyData[ip].resize( temperatureDim );
+            double pressureVal = std::stod( _solBlockRawData[ip][1] );
+            _pressureData[ip] = pressureVal;
+            // 
+            for ( int it = 0; it < temperatureDim; ++ it )
+            {   
+                char* endPtr;
+                _propertyData[ip][it] = std::stod( _solBlockRawData[ip][2] ) * std::strtod( _solBlockRawData[ip][3].c_str(),
+                & endPtr );
+            };
+        };
+        _experimentalData.setPressureData( _pressureData );
+        _experimentalData.setTemperatureData( _temperatureData );
+        _experimentalData.setPropertyData( _propertyData );
+    };
+
+    ExperimentalSolubilityData::ExperimentalSolubilityData( std::ifstream & dataFile, PROPERTY Property ):
+    _dataFile( std::move( dataFile ) ), _Property( Property ) 
+    { 
+        std::cout << "Instantiate object works. \n";
+    };
+
+    void ExperimentalSolubilityData::setPropertyNamePrefix( String propNamePrefix )
+    { _propNamePrefix = propNamePrefix; };
+
+    Tensor1DString ExperimentalSolubilityData::createPropertyNames( int numOfDataBlocks )
+    {
+        Tensor1DString propNames;
+        for ( int i = 0 ; i< numOfDataBlocks; ++ i )
+        {
+            String propName = std::to_string(i);
+            propName = _propNamePrefix + "_" + propName;
+            propNames.push_back( propName );
+        };
+        return propNames;
+    };
+
+    void ExperimentalSolubilityData::getPropertyData()
+    {
+        int numOfDataBlocks = 1;
+        int i = 0;
+        Tensor1DInt locOfDataBlocks; 
+        locOfDataBlocks.push_back( -1 );
+        //
+        std::regex re("\t");
+        String data;
+        Tensor2DString rawData;
+        //
+        if (_dataFile.is_open())
+        {
+        while ( std::getline(_dataFile, data) )
+        {   
+            Tensor1DString rawLineData;
+            if ( data.size() > 1 )
+            {   
+                /// FIXME: Some parsing is incorrect here !
+                std::sregex_token_iterator first{data.begin(), data.end(), re, -1}; 
+                std::sregex_token_iterator last; 
+                std::vector<std::string> tokens{first, last};
+                for ( std::string str : tokens )
+                {   
+                    rawLineData.push_back( str );
+                };
+            } else 
+            { 
+                numOfDataBlocks ++;
+                locOfDataBlocks.push_back( i );
+                rawLineData.push_back("\n");
+            };
+            rawData.push_back( rawLineData );
+            i++;
+        };
+        locOfDataBlocks.push_back( i );
+        _dataFile.close();
+        } else
+        {
+        printf("File not opened.");
+        };       
+        //
+        // PrintTensorString2D( rawData );
+        std::vector< Tensor2DString > rawDataOfAllBlocks;
+        for ( int j = 0; j < numOfDataBlocks; ++ j )
+        {
+            Tensor2DString rawDataOfOneBlock;
+            int dataBlockStart = locOfDataBlocks[j] + 1;
+            int dataBlockEnd = locOfDataBlocks[j+1];
+            for ( int k = dataBlockStart; k < dataBlockEnd; ++ k )
+            { rawDataOfOneBlock.push_back( rawData[k] ); };
+            //
+            rawDataOfAllBlocks.push_back( rawDataOfOneBlock );
+        };
+        //
+        Tensor1DString allPropNames = createPropertyNames( numOfDataBlocks );
+        for ( int j = 0; j < numOfDataBlocks; ++ j )
+        {   
+            Tensor2DString rawDataOfOneBlock = rawDataOfAllBlocks[j];
+            // PrintTensorString2D( rawDataOfOneBlock );
+            ExperimentalSolubilityDataBlock expSolDataBlock( rawDataOfOneBlock );
+            expSolDataBlock.getSolubilityData();
+            DataIdentifier dataIdentifier = { allPropNames[j], _Property };
+            _experimentalSolubilityData.insert( { dataIdentifier, expSolDataBlock._experimentalData } );
+        };
+    };
+
+    void ExperimentalSolubilityData::getDataIdentifiers()
+    {
+        for ( auto & e : _experimentalSolubilityData )
+        { _dataIdentifiers.push_back( e.first ); };
     };
 }
