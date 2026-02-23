@@ -1,6 +1,7 @@
-#include "../../solubility_model/src/model.hpp"
-#include "../../solubility_model/data/data.hpp"
+#ifndef SOL_MODEL_OPT_FUNC_HPP
+#define SOL_MODEL_OPT_FUNC_HPP
 
+#include "../../solubility_model/src/model.hpp"
 #include "../../src/limbo/tools/macros.hpp"
 
 #pragma once
@@ -11,7 +12,6 @@ namespace OPT_FUNCTION
     using namespace LOG;
     using namespace DATA;
     
-    typedef std::pair< String, PROPERTY > DataIdentifier;
     enum class PROBLEM_UNIT { T, P };
     enum class OBJ_FUNC_TYPE { MSE, RMSE, RE };
 
@@ -96,7 +96,8 @@ namespace OPT_FUNCTION
             LinearScaler(inputParams(2), param2Bounds[0], param2Bounds[1]),
             LinearScaler(inputParams(3), param3Bounds[0], param3Bounds[1]) };
             //
-            for ( int i = 0; i < problemParams.allPropNames.size(); ++ i)
+            int numOfProps = problemParams.allPropNames.size();
+            for ( int i = 0; i < numOfProps; ++ i)
             {   
                 PROPERTY Property = problemParams.allProps[i];
                 String propertyName = problemParams.allPropNames[i];
@@ -113,3 +114,5 @@ namespace OPT_FUNCTION
     };
 
 }
+
+#endif

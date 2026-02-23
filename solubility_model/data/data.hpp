@@ -59,26 +59,31 @@ namespace DATA
         Tensor2DFloat64 _propertyData = { { doubleNaN } };
         Data _experimentalData;
     };
+}
 
+namespace DATA
+{
     class ExperimentalSolubilityData
     {
-        /// TODO: Implement method(s) to extract solubility data 
+        /// Implement method(s) to extract solubility data 
         /// and reform as matrix to feed into Data class
         public:
         ExperimentalSolubilityData( std::ifstream & dataFile, PROPERTY Property );
 
         void setPropertyNamePrefix( String propNamePrefix );
-
+        
         Tensor1DString createPropertyNames( int numOfDataBlocks );
+        
         void getPropertyData();
+
         void getDataIdentifiers();
     
         public:
         std::ifstream _dataFile;
-        PROPERTY _Property;
-        String _propNamePrefix;
-        std::map < DataIdentifier, Data > _experimentalSolubilityData;
-        std::vector < DataIdentifier > _dataIdentifiers;
+        PROPERTY _Property = PROPERTY::H2LIQUID;
+        String _propNamePrefix = " ";
+        std::map < DataIdentifier, Data > _experimentalSolubilityData{ };
+        std::vector < DataIdentifier > _dataIdentifiers{ };
     };
 }
 

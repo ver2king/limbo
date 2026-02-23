@@ -1,4 +1,4 @@
-#include "data.hpp"
+#include "../../solubility_model/data/data.hpp"
 
 namespace DATA
 {
@@ -80,7 +80,8 @@ namespace DATA
 
     void ExperimentalSolubilityDataBlock::getSolubilityData()
     {   
-        PrintTensorString2D( _solBlockRawData );
+        //printf("Raw data of block. \n");
+        //PrintTensorString2D( _solBlockRawData );
         int const temperatureDim = 1;
         int const pressureDim = _solBlockRawData.size();
         //
@@ -110,10 +111,7 @@ namespace DATA
     };
 
     ExperimentalSolubilityData::ExperimentalSolubilityData( std::ifstream & dataFile, PROPERTY Property ):
-    _dataFile( std::move( dataFile ) ), _Property( Property ) 
-    { 
-        std::cout << "Instantiate object works. \n";
-    };
+    _dataFile( std::move( dataFile ) ), _Property( Property ) { };
 
     void ExperimentalSolubilityData::setPropertyNamePrefix( String propNamePrefix )
     { _propNamePrefix = propNamePrefix; };
@@ -137,7 +135,7 @@ namespace DATA
         Tensor1DInt locOfDataBlocks; 
         locOfDataBlocks.push_back( -1 );
         //
-        std::regex re("\t");
+        std::regex re("(\\t)");
         String data;
         Tensor2DString rawData;
         //
@@ -192,6 +190,10 @@ namespace DATA
             // PrintTensorString2D( rawDataOfOneBlock );
             ExperimentalSolubilityDataBlock expSolDataBlock( rawDataOfOneBlock );
             expSolDataBlock.getSolubilityData();
+            //
+            //PrintTensor1D<double>(expSolDataBlock._pressureData);
+            //PrintTensor1D<double>(expSolDataBlock._temperatureData);
+            //PrintTensor2D<double>(expSolDataBlock._propertyData);
             DataIdentifier dataIdentifier = { allPropNames[j], _Property };
             _experimentalSolubilityData.insert( { dataIdentifier, expSolDataBlock._experimentalData } );
         };

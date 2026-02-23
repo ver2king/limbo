@@ -45,11 +45,12 @@ namespace OPT_FUNCTION
     double ObjectiveFunction::computeSingleProperty( DataIdentifier & dataInd )
     {    
         String propName = dataInd.first;
-        if ( verifyDimension() == false ) 
-        { return doubleInf; }
-        else if ( FindElementInTensor1D<String>( propName, _modelPropNames ) == false ||
+        if ( FindElementInTensor1D<String>( propName, _modelPropNames ) == false ||
         FindElementInTensor1D<String>( propName, _experimentalPropNames ) == false )
-        { return doubleInf;  }
+        { 
+            printf("Can not find data identifider. \n");
+            return doubleInf;  
+        }
         else 
         {   
             Tensor2DFloat64 modelPropData = _modelData.at( dataInd )._propertyData;
@@ -67,6 +68,8 @@ namespace OPT_FUNCTION
             {
                 double modelVal = modelPropData[i][j];
                 double expVal = expPropData[i][j];
+                std::cout << "Model and experiment values are: " << "\n";
+                std::cout << modelVal << " , " << expVal << "\n";
                 if ( modelVal < 0 || expVal < 0 ) { 
                     totalValid += 0; 
                     totalVal += 0.; 
@@ -108,7 +111,8 @@ namespace OPT_FUNCTION
     double ObjectiveFunction::computeMultipleProperties( std::vector< DataIdentifier > & dataInds )
     {
         double objVal = 0;
-        for ( int i = 0; i < dataInds.size(); ++ i )
+        int numOfDataInds = dataInds.size();
+        for ( int i = 0; i < numOfDataInds; ++ i )
         {
             objVal += computeSingleProperty( dataInds[i] );
         };

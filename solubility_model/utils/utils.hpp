@@ -5,6 +5,7 @@
 #ifndef SOL_MODEL_UTILS_HPP
 #define SOL_MODEL_UTILS_HPP
 
+#include <typeinfo>
 #include <cstdlib>
 
 #include <vector>
